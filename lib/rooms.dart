@@ -1,52 +1,114 @@
+import 'dart:convert';
 import 'dart:core';
-
 import 'dart:io';
 
-int accountBalance = 10000; // To be update with withdraw and deposit function
-String name;
-String emailAddress;
-String gender;
-String country;
-String favoriteFood;
-String hobby;
-String friend;
-String favoriteCar;
-int age;
+import 'package:args/args.dart';
+import 'package:collection/collection.dart';
 
-void getUserInformation() {
-  while (true) {
-    // get user's name
-    name = getUserResponse('Enter your name');
+List<Room> rooms = []; // A room can only have 5 students and one staff member
 
-    // get user's email address
-    emailAddress = getUserResponse('Enter your email address');
+void getUserInformation(List<String> arguments) {
+  var roomNames = _getRoomNamesFromArguments(arguments);
+  var newRooms = _createRoomsFromRoomNames(roomNames);
+  _updateRooms(newRooms);
 
-    // get user gender
-    gender = getUserResponse('Enter your gender');
+  if (rooms.isNotEmpty) {
+    while (true) {
+      _addPersonToRoom();
+    }
+  } else {
+    print('You did not add any room names\n');
+  }
+}
 
-    // get user's country
-    country = getUserResponse('Enter your country');
-
-    // get user's favorite food
-    favoriteFood = getUserResponse('Enter your favorite food');
-
-    // get user's hobby
-    hobby = getUserResponse('Enter your hobby');
-
-    // get user's friends
-    friend = getUserResponse("Enter your friends' name");
-
-    // get user's favorite car
-    favoriteCar = getUserResponse('What is your favorite car');
-
-    // get user's age
-    age = getUserAge();
-
-    updateUserAccountBalance();
-
-    printResults();
-
+List<String> _getRoomNamesFromArguments(List<String> arguments) {
+  var roomNames = <String>[];
+  var parser = ArgParser();
+  parser.addOption('name', abbr: 'n');
+  try {
+    var results = parser.parse(arguments);
+    if (results['name'] != null) {
+      roomNames.add(results['name']);
+      if (results.rest.isNotEmpty) {
+        roomNames.addAll(results.rest);
+      }
+    }
+    return roomNames;
+  } catch (e) {
+    print('$e');
     exit(0);
+  }
+}
+
+List<Room> _createRoomsFromRoomNames(List<String> roomNames) {
+  if (roomNames.isNotEmpty) {
+    return roomNames.map((name) => Room(name)).toList();
+  }
+  return [];
+}
+
+void _updateRooms(List<Room> newRooms) {
+  rooms.addAll(newRooms);
+  print('${rooms.length} rooms added successfully, add people to your rooms\n');
+}
+
+void _addPersonToRoom() {
+  var userResponse = getUserResponse(
+      'Enter "student" to add student, "staff" to add a staff member');
+  if (userResponse.toLowerCase() == 'student') {
+    // add student to room
+  } else if (userResponse.toLowerCase() == 'staff') {
+    // add staff to room
+    _addStaffToRoom();
+  } else {
+    print('Not a valid option, please try again\n');
+    _addPersonToRoom();
+  }
+}
+
+void _addStaffToRoom() {
+  print('\nLets add a staff member.');
+  var userResponse = getUserResponse('Enter name(s) of staff member to add');
+  var staff = Staff(names: userResponse);
+  print('');
+
+  // add staff to room
+  _selectRoom(staff);
+}
+
+void _selectRoom(Person staff, {bool retry = false}) {
+  var message = retry
+      ? 'Wrong choice, please choose from the names below:'
+      : 'The following are the rooms names in our records:';
+  print(message);
+  print('$allRooms');
+
+  var response = getUserResponse('Select a room to add ${staff.names}');
+  // hashCode and operator come in handle here
+  var room = Room(response.trim());
+  if (rooms.contains(room)) {
+    print('');
+    room.addPerson(staff);
+    print("");
+    print("room $room has ${room.occupants.length}");
+  } else {
+    print('Room $response not found, available rooms are $allRooms\n');
+    _selectRoom(staff, retry: true);
+  }
+}
+
+String get allRooms => rooms.join(', ');
+
+void quitApplication(
+    {String title =
+        "We have reached the end of our program, enter 'q' or press CTRL+C to quit"}) {
+  var quit = getUserResponse(title);
+  if (quit.toLowerCase() == 'q') {
+    printResults();
+    exit(0);
+  } else {
+    print('This is not one of the provided options');
+    print('');
   }
 }
 
@@ -83,55 +145,72 @@ int getUserAge() {
 
 void printResults() {
   print('\n');
-  print('**********Results*************');
-  print('Your name is $name');
-  print('Your email address is $emailAddress');
-  print('Your gender is $gender');
-  print('Your country is $country');
-  print('Your favorite Food is $favoriteFood');
-  print('Your hobby is $hobby');
-  print('Your friend is $friend');
-  print('Your favorite Car is $favoriteCar');
-  print('Your age is $age');
-  print('Your account balance is $accountBalance');
-  print('*********Results**************');
   print('');
 }
 
-void updateUserAccountBalance() {
-  var response = getUserResponse('Do you want to use your account(Yes/No)?');
-  if (response != null) {
-    if (response.toLowerCase() == 'yes') {
-      var answer1 = getUserResponse(
-          'Do you want to deposit or withdraw from your account(deposit/withdraw)?');
-      if (answer1 != null && answer1.toLowerCase() == 'deposit') {
-        //TODO finish implementing deposit function provided below  so that a use can deposit money
-        deposit();
-      } else if (answer1 != null && answer1.toLowerCase() == 'withdraw') {
-        //TODO finish implementing withdraw function provided below so that a use can deposit money
-        withdraw();
-      } else {
-        print('$answer1 is not one of the options');
-      }
-    } else {
-      print('You decided not to use your account');
-    }
-  } else {
-    print('You did not input anything');
+abstract class Person {
+  String names;
+}
+
+abstract class Building {
+  String name;
+  List<Room> rooms;
+
+  void addRoom(Room room);
+  void removeRoom(Room room);
+}
+
+class Room {
+  String name;
+  List<Person> occupants = [];
+
+  Room(this.name);
+
+  @override
+  String toString() => name;
+
+  @override
+  bool operator ==(Object other) {
+    return other is Room && other.name == name;
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+
+  void addPerson(Person person) {
+    occupants.add(person);
+  }
+
+  void removePerson(Person person) {}
+}
+
+class Staff implements Person {
+  @override
+  String names;
+
+  Staff({this.names});
+}
+
+class Hostel implements Building {
+  @override
+  String name;
+
+  @override
+  List<Room> rooms;
+
+  @override
+  void addRoom(Room room) {
+    // TODO: implement addRoom
+  }
+
+  @override
+  void removeRoom(Room room) {
+    // TODO: implement removeRoom
   }
 }
 
-void deposit() {
-  var depositAmount = getUserResponse('How much do you want to deposit?');
-  //TODO increase accountBalance by depositAmount
-  // Make sure depositAmount is a valid integer
-  // print new balance after depositing
-}
-
-void withdraw() {
-  //TODO get the amount that the user wants to withdraw
-  // store the amount in a variable called withdrawAmount
-  // make sure withdrawAmount is a valid integer
-  // make sure a user does not withdraw more than their accountBalance
-  // print new balance
+void _createHostel(String name, List<Room> rooms) {
+  var hostel = Hostel();
+  hostel.name = name;
+  hostel.rooms = rooms;
 }
