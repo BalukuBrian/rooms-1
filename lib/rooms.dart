@@ -11,6 +11,8 @@ void getUserInformation(List<String> arguments) {
   _updateRooms(newRooms);
 
   if (rooms.isNotEmpty) {
+    print(
+        '${rooms.length} rooms added successfully, add people to your rooms\n');
     while (true) {
       _runApplication();
     }
@@ -47,7 +49,6 @@ List<Room> _createRoomsFromRoomNames(List<String> roomNames) {
 
 void _updateRooms(List<Room> newRooms) {
   rooms.addAll(newRooms);
-  print('${rooms.length} rooms added successfully, add people to your rooms\n');
 }
 
 void _runApplication() {
@@ -64,13 +65,13 @@ void _runApplication() {
     // Requirement: when creating the Student class use Person class as Interface
     // Hint one: look at how Staff class implements the interface of Person
     // Hint two: Borrow ideas from the functionality of adding staff. ie run the code and choose staff.
-    // Can you reproduce that functionality for the student feature? 
+    // Can you reproduce that functionality for the student feature?
     // Feel free to reuse any functions that are already created. Just don't modify them.
     // You can add extra features if you have the above functionality working properly
     // Happy coding
     print('');
     print(
-        'This feature is currently not implemented, it is your task to implement it\n');
+        'This feature is currently not implemented, it is your task to implement it\nEnter staff to view staff feature in action\n');
   } else if (userResponse.toLowerCase() == 'staff') {
     // add staff to room
     _addStaffToRoom();
