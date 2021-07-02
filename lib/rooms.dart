@@ -69,9 +69,13 @@ void _runApplication() {
     // Feel free to reuse any functions that are already created. Just don't modify them.
     // You can add extra features if you have the above functionality working properly
     // Happy coding
-    print('');
+
+    /* print('');
     print(
         'This feature is currently not implemented, it is your task to implement it\nEnter staff to view staff feature in action\n');
+   */
+    print('');
+    _addStudentToRoom();
   } else if (userResponse.toLowerCase() == 'staff') {
     // add staff to room
     _addStaffToRoom();
@@ -95,6 +99,21 @@ void _addStaffToRoom() {
   } else {
     print('Staff member name can not be empty\n');
     _addAnotherStaffMember();
+  }
+}
+
+void _addStudentToRoom() {
+  print('\nLets add a student member.');
+  var userResponse = _getUserResponse('Enter name(s) of student member to add');
+  if (userResponse.isNotEmpty) {
+    var student = Student(names: userResponse);
+
+    print('');
+    _selectRoom(student);
+    _addAnotherStudentMember();
+  } else {
+    print('Student member name can not be empty\n');
+    _addAnotherStudentMember();
   }
 }
 
@@ -177,6 +196,19 @@ void _addAnotherStaffMember() {
   }
 }
 
+void _addAnotherStudentMember() {
+  var userResponse =
+      _getUserResponse('Do you want to add another student member? yes/no');
+  if (userResponse.toLowerCase() == 'yes') {
+    _addStudentToRoom();
+  } else if (userResponse.toLowerCase() == 'no') {
+    print('Lets continue then ...\n');
+  } else {
+    print(
+        '$userResponse is not a valid option.\nValid options are yes or no\n');
+  }
+}
+
 /* Helper functions */
 String _getUserResponse(String question) {
   stdout.write('$question: \n');
@@ -203,6 +235,23 @@ class Staff implements Person {
   @override
   bool operator ==(Object other) {
     return other is Staff && other.names == names;
+  }
+
+  // gives hashcode for this object(used when comparing objects)
+  @override
+  int get hashCode => names.hashCode;
+}
+
+class Student implements Person {
+  @override
+  String names;
+
+  Student({this.names});
+
+  // used to compare if two objects are the same
+  @override
+  bool operator ==(Object other) {
+    return other is Student && other.names == names;
   }
 
   // gives hashcode for this object(used when comparing objects)
