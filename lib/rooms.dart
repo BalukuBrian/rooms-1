@@ -51,24 +51,56 @@ void _updateRooms(List<Room> newRooms) {
   rooms.addAll(newRooms);
 }
 
+// void _deleteRooms(List<Room> newRooms) {
+//   if (rooms.isNotEmpty) {
+//     var availableRooms = rooms.length;
+//     print('$availableRooms rooms exist for delete\n');
+
+//     rooms.clear();
+//     print('$availableRooms rooms deleted successfully\n');
+//     while (true) {
+//       _runApplication();
+//     }
+//   } else {
+//     print('You did not delete any room names\n');
+//   }
+// }
+
+void _deleteRooms(List<Room> newRooms) {
+  if (rooms.isNotEmpty) {
+    var availableRooms = rooms.length;
+    print('$availableRooms rooms exist for delete\n');
+    var userResponse =
+        _getUserResponse('Do you want to delete these rooms Y/N');
+    if (userResponse.toLowerCase() == 'y') {
+      rooms.clear();
+      print('$availableRooms rooms deleted successfully\n');
+      while (true) {
+        _runApplication();
+      }
+    } else if (userResponse.toLowerCase() == 'n') {
+      _runApplication();
+    } else {
+      print('');
+      print(
+          '$userResponse is not a valid option, please try again\nValid options are Y or N\n');
+      _runApplication();
+    }
+  } else if (rooms.isEmpty) {
+    print('Ooops! Rooms List is Empty\n');
+    _runApplication();
+  } else {
+    print('You did not delete any room names\n');
+  }
+}
+
 void _runApplication() {
   var userResponse = _getUserResponse(
-      'Enter "student" to add student, "staff" to add a staff member, CTRL+C to quit');
+      'Enter "student" to add student, "staff" to add a staff member,'
+      '"remove" to remove a Staff Member, "delete" to delete all room'
+      ' CTRL+C to quit /n');
   if (userResponse.toLowerCase() == 'student') {
     // TODO This is your task
-    // We have a global variable called rooms
-    // rooms contains rooms created from the room names that you passed in the command line
-    // Your task is to add students(occupants) to these rooms
-    // each room can only have 4 occupants of type Person(this functionality is already implemented
-    // you just have to use it in your code)
-    // an occupant should not be added to a room more than once.
-    // Requirement: when creating the Student class use Person class as Interface
-    // Hint one: look at how Staff class implements the interface of Person
-    // Hint two: Borrow ideas from the functionality of adding staff. ie run the code and choose staff.
-    // Can you reproduce that functionality for the student feature?
-    // Feel free to reuse any functions that are already created. Just don't modify them.
-    // You can add extra features if you have the above functionality working properly
-    // Happy coding
 
     /* print('');
     print(
@@ -79,26 +111,16 @@ void _runApplication() {
   } else if (userResponse.toLowerCase() == 'staff') {
     // add staff to room
     _addStaffToRoom();
+  } else if (userResponse.toLowerCase() == 'remove') {
+    // add staff to room
+    _removeStaffFromRoom();
+  } else if (userResponse.toLowerCase() == 'delete') {
+    _deleteRooms(rooms);
   } else {
     print('');
     print(
         '$userResponse is not a valid option, please try again\nValid options are student or staff\n');
     _runApplication();
-  }
-}
-
-void _addStaffToRoom() {
-  print('\nLets add a staff member.');
-  var userResponse = _getUserResponse('Enter name(s) of staff member to add');
-  if (userResponse.isNotEmpty) {
-    var staff = Staff(names: userResponse);
-
-    print('');
-    _selectRoom(staff);
-    _addAnotherStaffMember();
-  } else {
-    print('Staff member name can not be empty\n');
-    _addAnotherStaffMember();
   }
 }
 
@@ -183,6 +205,21 @@ void _selectAFreeRoom(Person person) {
   }
 }
 
+void _addStaffToRoom() {
+  print('\nLets add a staff member.');
+  var userResponse = _getUserResponse('Enter name(s) of staff member to add');
+  if (userResponse.isNotEmpty) {
+    var staff = Staff(names: userResponse);
+
+    print('');
+    _selectRoom(staff);
+    _addAnotherStaffMember();
+  } else {
+    print('Staff member name can not be empty\n');
+    _addAnotherStaffMember();
+  }
+}
+
 void _addAnotherStaffMember() {
   var userResponse =
       _getUserResponse('Do you want to add another staff member? yes/no');
@@ -201,6 +238,71 @@ void _addAnotherStudentMember() {
       _getUserResponse('Do you want to add another student member? yes/no');
   if (userResponse.toLowerCase() == 'yes') {
     _addStudentToRoom();
+  } else if (userResponse.toLowerCase() == 'no') {
+    print('Lets continue then ...\n');
+  } else {
+    print(
+        '$userResponse is not a valid option.\nValid options are yes or no\n');
+  }
+}
+
+void _removeStaffFromRoom() {
+  print('\nLets remove a staff member.');
+  var userResponse =
+      _getUserResponse('Enter name(s) of staff member to remove');
+  if (userResponse.isNotEmpty) {
+    var staff = Staff(names: userResponse);
+
+    print('');
+    _selectRoomToDeletePerson(staff);
+    _removeAnothertaffFromRoom();
+  } else {
+    print('Staff member name can not be empty\n');
+    _removeAnothertaffFromRoom();
+  }
+}
+
+void _selectRoomToDeletePerson(Person person, {bool retry = false}) {
+  var message = retry
+      ? 'Wrong choice, please choose from the names below:'
+      : 'The following are the rooms names in our records:';
+  print(message);
+  print('$allRooms\n');
+
+  var response =
+      _getUserResponse('Select a room from which to remove ${person.names}');
+
+  // hashCode and operator come in handle here
+  var selectedRoom = Room(response.trim());
+  if (rooms.contains(selectedRoom)) {
+    print('');
+    var currentRoomIndex = rooms.indexOf(selectedRoom);
+    var currentRoom = rooms[currentRoomIndex];
+
+    if (currentRoom.occupants.contains(person)) {
+      var result = currentRoom.addPerson(person);
+      print(
+          'Room $currentRoom has ${currentRoom.occupants.length} occupant(s)\n');
+      if (!result) {
+        print(
+            'Room ${currentRoom.name} is already full, we can not add any more people\n');
+        _selectAFreeRoom(person);
+      }
+    } else {
+      print(
+          'Person ${person.names} already exists in room ${currentRoom.name}\n');
+    }
+  } else {
+    print('Room $response not found, available rooms are $allRooms\n');
+    _selectRoom(person, retry: true);
+  }
+}
+
+void _removeAnothertaffFromRoom() {
+  var userResponse =
+      _getUserResponse('Do you want to remove another staff member? yes/no');
+  if (userResponse.toLowerCase() == 'yes') {
+    _removeStaffFromRoom();
   } else if (userResponse.toLowerCase() == 'no') {
     print('Lets continue then ...\n');
   } else {
@@ -279,6 +381,15 @@ class Room {
   bool addPerson(Person person) {
     if (occupants.length < 4) {
       occupants.add(person);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool removePerson(Person person) {
+    if (occupants.length < 4) {
+      occupants.remove(person);
       return true;
     } else {
       return false;
