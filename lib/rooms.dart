@@ -1,6 +1,5 @@
 import 'dart:core';
 import 'dart:io';
-
 import 'package:args/args.dart';
 
 List<Room> rooms = []; // A room can only have 4 occupants
@@ -51,21 +50,6 @@ void _updateRooms(List<Room> newRooms) {
   rooms.addAll(newRooms);
 }
 
-// void _deleteRooms(List<Room> newRooms) {
-//   if (rooms.isNotEmpty) {
-//     var availableRooms = rooms.length;
-//     print('$availableRooms rooms exist for delete\n');
-
-//     rooms.clear();
-//     print('$availableRooms rooms deleted successfully\n');
-//     while (true) {
-//       _runApplication();
-//     }
-//   } else {
-//     print('You did not delete any room names\n');
-//   }
-// }
-
 void _deleteRooms(List<Room> newRooms) {
   if (rooms.isNotEmpty) {
     var availableRooms = rooms.length;
@@ -97,11 +81,10 @@ void _deleteRooms(List<Room> newRooms) {
 void _runApplication() {
   var userResponse = _getUserResponse(
       'Enter "student" to add student, "staff" to add a staff member,'
-      '"remove" to remove a Staff Member, "delete" to delete all room'
+      '"removeStaff" to remove a Staff Member, "delete" to delete all available rooms'
       ' CTRL+C to quit /n');
   if (userResponse.toLowerCase() == 'student') {
     // TODO This is your task
-
     /* print('');
     print(
         'This feature is currently not implemented, it is your task to implement it\nEnter staff to view staff feature in action\n');
@@ -111,7 +94,7 @@ void _runApplication() {
   } else if (userResponse.toLowerCase() == 'staff') {
     // add staff to room
     _addStaffToRoom();
-  } else if (userResponse.toLowerCase() == 'remove') {
+  } else if (userResponse.toLowerCase() == 'removestaff') {
     // add staff to room
     _removeStaffFromRoom();
   } else if (userResponse.toLowerCase() == 'delete') {
@@ -280,17 +263,15 @@ void _selectRoomToDeletePerson(Person person, {bool retry = false}) {
     var currentRoom = rooms[currentRoomIndex];
 
     if (currentRoom.occupants.contains(person)) {
-      var result = currentRoom.addPerson(person);
+      var result = currentRoom.removePerson(person);
+
       print(
-          'Room $currentRoom has ${currentRoom.occupants.length} occupant(s)\n');
-      if (!result) {
-        print(
-            'Room ${currentRoom.name} is already full, we can not add any more people\n');
-        _selectAFreeRoom(person);
-      }
+          'Person ${person.names} has been removed from Room ${currentRoom.name}:');
+      print(
+          'Room $currentRoom has ${currentRoom.occupants.length} occupant(s)');
     } else {
       print(
-          'Person ${person.names} already exists in room ${currentRoom.name}\n');
+          'Person ${person.names} does not exist in room ${currentRoom.name}\n');
     }
   } else {
     print('Room $response not found, available rooms are $allRooms\n');
